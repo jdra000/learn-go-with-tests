@@ -14,14 +14,7 @@ type Sleeper interface {
 	Sleep()
 }
 
-// * Real sleeper
-type DefaultSleeper struct{}
-
-func (d *DefaultSleeper) Sleep() {
-	time.Sleep(1 * time.Second)
-}
-
-// * Fake sleeper that checks sleep and writting
+// * Spy	 sleeper that checks sleep and writting
 // * To evaluate sleep it appends "sleep" every time it's Sleep() method is called
 // * To evaluate writting it appends "write" every time it's customized Write() method it's called
 const write = "write"
@@ -47,9 +40,29 @@ func Countdown(out io.Writer, sleeper Sleeper) {
 	fmt.Fprintf(out, finalWord)
 }
 
+// * Spy and Real sleeper at the same time. Its sleep time is customizable.
+type ConfigurableSleeper struct {
+	duration time.Duration
+	sleep    func(time.Duration)
+}
+
+func (c *ConfigurableSleeper) Sleep() {
+	c.sleep(c.duration)
+}
+
+// * Spy struct to use inside ConfigurableSleeper{sleep: spyTime.Sleep}
+// * Our spy struct does not sleep but changes its durationSlept to the time.Duration value
+type SpyTime struct {
+	durationSlept time.Duration
+}
+
+func (s *SpyTime) Sleep(duration time.Duration) {
+	s.durationSlept = duration
+}
+
 func main() {
 	// * Here we call the real sleeper. In the tests, the fake one.
-	// * The real sleeper Sleep() method implements the 1 sec delay.
-	sleeper := &DefaultSleeper{}
+	// * The real sleeper Sleep() method implements the 1 sec delay. time.Sleep(1 * time.Second)
+	sleeper := &ConfigurableSleeper{1 * time.Second, time.Sleep}
 	Countdown(os.Stdout, sleeper)
 }
