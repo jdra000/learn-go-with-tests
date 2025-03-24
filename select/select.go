@@ -39,8 +39,3 @@ func ping(url string) chan struct{} {
 	}()
 	return ch
 }
-func measureResponseTime(url string) time.Duration {
-	start := time.Now()
-	http.Get(url)
-	return time.Since(start)
-}
